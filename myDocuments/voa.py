@@ -4,6 +4,7 @@
 import re,urllib2,os
 	
 global save_path
+global DOWNLOAD_NUM
 
 def get_fileName(x):
 	p_tmp = re.compile('/[^/\.]+.html')
@@ -46,33 +47,36 @@ def procedure(x):
 		print 'Finished.'
 
 def main():
-	global save_path
+	global save_path,DOWNLOAD_NUM
 	save_path = 'voa/'
-	date = raw_input('Please tell me today\' s date: (XXXX-XX-XX)')
-	datep = re.compile('\d+')
-	dates = datep.findall(date)
-	save_path = save_path+dates[0]+dates[1]+dates[2]+'/';
+	date = raw_input('Please tell me the directory you want to put in: ')
+	save_path = save_path+date+'/';
 	url_start = 'http://www.51voa.com/VOA_Standard_'
 	local_path = '/home/mkch/voa/'
-	content = urllib2.urlopen(url_start+'1'+'.html').read()
+	DOWNLOAD_NUM = input('Please tell me how many files you want to download: ')
 	if not os.path.isdir("voa"):
 		os.makedirs("voa")
 	if not os.path.isdir(save_path):
 		os.makedirs(save_path)
-	p = re.compile('/VOA_Standard_English/[a-z0-9-]*\.html')
-	m = p.findall(content)
-	if not m:
-		print 'nothing'
-	else:
-		k = 0
-		f = 1
-		while m[k] and f:
-			procedure(m[k])
-			k = k + 1
-			if not k%1:
-				flag = raw_input('Want to download more 10 pieces?(y or n) : ')
-				if flag=='n':
-					f=0
+	f = 1
+	k = 0
+	page = 1
+	while f:
+		content = urllib2.urlopen(url_start+str(page)+'.html').read()
+		p = re.compile('/VOA_Standard_English/[a-z0-9-]*\.html')
+		m = p.findall(content)
+		if not m:
+			print 'nothing'
+		else:
+			while m[k] and f:
+				procedure(m[k])
+				k = k + 1
+				if not k%DOWNLOAD_NUM:
+					flag = raw_input('Want to download more '+str(DOWNLOAD_NUM)+' pieces?(y or n) : ')
+					if flag=='n':
+						f=0
+			if f:
+				page = page + 1
 	
 
 main()
