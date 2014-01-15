@@ -53,6 +53,7 @@ def procedure(x):
 		data = f.read()  
 		with open(save_path+file_name+'.mp3', 'wb') as code:  
 			    code.write(data)
+		#urllib.urlretrieve(target.group(), save_path+file_name+'.mp3')
 		print 'Finished.'
 	print 'Now to download the script of this file'
 	p_script = re.compile('<div id=\"content\">[\s\S]+<div id=\"Bottom_VOA\">')
@@ -63,7 +64,7 @@ def procedure(x):
 		print 'Script Downloading ...'
 		f_script = open(save_path+file_name+'.doc', 'wb')
 		f_script.write(file_script.group())
-		f.close()
+		f_script.close()
 		print 'Finished.'
 
 def main():
