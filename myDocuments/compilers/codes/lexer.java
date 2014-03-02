@@ -124,8 +124,19 @@ public class lexer
 	{
 		if(x.length()<2) return false;
 		char[] input=x.toCharArray();
-		if((input[0]=='\"'&&input[x.length()-1]=='\"')||(input[0]=='\''&&input[x.length()-1]=='\'')) return true;
-		else return false;
+		if(input[0]=='\"'&&input[x.length()-1]=='\"')
+		{
+			for(int i=1;i<x.length()-1;++i)
+				if(input[i]=='\"') return false;
+			return true;
+		}
+		if(input[0]=='\''&&input[x.length()-1]=='\'')
+		{
+			for(int i=1;i<x.length()-1;++i)
+				if(input[i]=='\'') return false;
+			return true;
+		}
+		return false;
 	}
 	public static boolean isToken(String x)
 	{

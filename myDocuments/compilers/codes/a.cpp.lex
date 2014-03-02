@@ -1,1 +1,1 @@
-<Operate, #> <Keyword, include> <Operate, <> <Identifier, iostream> <Operate, >> <Keyword, using> <Keyword, namespace> <Identifier, std> <Semicolon, ;> <Keyword, int> <Identifier, main> <OpenParen, (> <CloseParen, )> <OpenParen, {> <Keyword, int> <Identifier, a> <Operate, ,> <Identifier, b> <Semicolon, ;> <Identifier, cin> <Operate, >>> <Identifier, a> <Operate, >>> <Identifier, b> <Semicolon, ;> <Identifier, cout> <Operate, <<> <Identifier, a> <Operate, +> <Identifier, b> <Semicolon, ;> <Keyword, return> <Number, 0> <Semicolon, ;> <CloseParen, }> 
+<Number, 1e2> 
