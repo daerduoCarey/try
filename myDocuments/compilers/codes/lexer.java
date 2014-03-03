@@ -104,6 +104,10 @@ public class lexer
 			if(!(input[i]==' '||input[i]=='\t'||input[i]=='\n')) return false;
 		return true;
 	}
+	private static boolean __isBlock(char x)
+	{
+		return x==' '||x=='\t'||x=='\n'||x==';'||x=='('||x==')'||x=='{'||x=='}';
+	}
 	private static void execute(String x,FileWriter out)
 	{
 		++tot;
@@ -118,7 +122,7 @@ public class lexer
 			else if(isWhite(x)) ;
 			else if(isOpenParen(x)) out.write("<OpenParen, "+x+"> ");
 			else if(isCloseParen(x)) out.write("<CloseParen, "+x+"> ");
-		}catch(IOException e) {}
+		}catch(IOException e) {System.out.println("Cannot write.");}
 	}
 	public static boolean isString(String x)
 	{
@@ -152,7 +156,12 @@ public class lexer
 			int st=0,end;
 			while(st<x.length())
 			{
-				for(end=x.length()-1;end>=st;--end)
+				int mark=st+1;
+				if(__isBlock(input[st]))
+					while(mark<x.length()&&__isBlock(input[mark])) ++mark;
+				else
+					while(mark<x.length()&&!__isBlock(input[mark])) ++mark;
+				for(end=mark-1;end>=st;--end)
 				{
 					String y=x.substring(st,end+1);
 					if(isToken(y)) break; 
