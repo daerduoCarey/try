@@ -2,6 +2,29 @@
 :set autoindent
 :syntax on
 :set bg=dark
+:set smarttab
+:set ruler
+
+filetype indent on
+filetype plugin on
+
+inoremap ( ()<Esc>i
+inoremap { {<Space><Return>}<Esc>kli<CR>
+inoremap [ []<Esc>i
+
+function! RemoveNextDoubleChar(char)
+    let l:line = getline(".")
+    let l:next_char = l:line[col(".")]
+ 
+    if a:char == l:next_char
+        execute "normal! l"
+    else
+        execute "normal! i" . a:char . ""
+    end
+endfunction
+inoremap ) <ESC>:call RemoveNextDoubleChar(')')<CR>a
+inoremap ] <ESC>:call RemoveNextDoubleChar(']')<CR>a
+inoremap } <ESC>:call RemoveNextDoubleChar('}')<CR>a
 
 func! CompileGpp()
 	exec "w"
@@ -64,10 +87,11 @@ vmap <F5>:call RunPdflatex()<CR>
 "set iskeyword+=:
 "autocmd BufEnter *.tex set sw=2
 
-setlocal omnifunc=javacomplete#Complete 
-autocmd Filetype java set omnifunc=javacomplete#Complete
-autocmd Filetype java set completefunc=javacomplete#CompleteParamsInf
-inoremap <buffer> <C-X><C-U> <C-X><C-U><C-P> 
-inoremap <buffer> <C-S-Space> <C-X><C-U><C-P>
+if has("autocmd")
+	autocmd Filetype java setlocal omnifunc=javacomplete#Complete
+endif
 
-autocmd Filetype java inoremap <buffer>  .  .<C-X><C-O><C-P><Down>
+setlocal completefunc=javacomplete#CompleteParamsInfo
+inoremap <buffer> <C-X><C-U> <C-X><C-U><C-P>
+inoremap <buffer> <C-S-Space> <C-X><C-U><C-P>
+autocmd FileType java inoremap <buffer> . .<C-X><C-O><C-P><Down>
