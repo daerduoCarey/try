@@ -13,15 +13,16 @@ inoremap { {<Space><Return>}<Esc>kli<CR>
 inoremap [ []<Esc>i
 
 function! RemoveNextDoubleChar(char)
-    let l:line = getline(".")
-    let l:next_char = l:line[col(".")]
- 
-    if a:char == l:next_char
-        execute "normal! l"
-    else
-        execute "normal! i" . a:char . ""
-    end
+	let l:line = getline(".")
+	let l:next_char = l:line[col(".")]
+
+	if a:char == l:next_char
+		execute "normal! l"
+	else
+		execute "normal! a".a:char.""
+	end
 endfunction
+
 inoremap ) <ESC>:call RemoveNextDoubleChar(')')<CR>a
 inoremap ] <ESC>:call RemoveNextDoubleChar(']')<CR>a
 inoremap } <ESC>:call RemoveNextDoubleChar('}')<CR>a
