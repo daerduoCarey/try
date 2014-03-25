@@ -4,13 +4,17 @@
 :set bg=dark
 :set smarttab
 :set ruler
+:set hlsearch
 
 filetype indent on
 filetype plugin on
 
 inoremap ( ()<Esc>i
-inoremap { {<Space><Return>}<Esc>kli<CR>
+inoremap { {}<Esc>i
 inoremap [ []<Esc>i
+inoremap <F2> package compiler2014.ast;<CR><CR>public class <CR>{<CR><CR>}<Esc>ki<tab>
+inoremap {: {: RESULT = new  :}<Esc>hhi
+inoremap non non terminal 
 
 function! RemoveNextDoubleChar(char)
 	let l:line = getline(".")
@@ -78,12 +82,13 @@ vmap <F9> :call RunCode()<CR>
 
 map <F5> :call RunPdflatex()<CR>
 imap <F5> :call RunPdflatex()<CR>
-vmap <F5>:call RunPdflatex()<CR>
+vmap <F5> :call RunPdflatex()<CR>
+
 
 "filetype plugin on
 "set grepprg=grep\ -nH\ $*
 "let g:tex_flavor='latex'
-"let g:Imap_UsePlaceHolders=0
+let g:Imap_UsePlaceHolders=0
 "let g:Tex_DefaultTargetFormat = 'pdf'
 "set iskeyword+=:
 "autocmd BufEnter *.tex set sw=2
@@ -95,4 +100,13 @@ endif
 setlocal completefunc=javacomplete#CompleteParamsInfo
 inoremap <buffer> <C-X><C-U> <C-X><C-U><C-P>
 inoremap <buffer> <C-S-Space> <C-X><C-U><C-P>
-autocmd FileType java inoremap <buffer> . .<C-X><C-O><C-P><Down>
+autocmd FileType java inoremap <buffer> . .<C-X><C-O><C-P>
+
+"JFlex Highlight
+augroup filetype
+  au BufRead,BufNewFile *.flex,*.jflex    set filetype=jflex
+augroup END
+au Syntax jflex    so ~/.vim/syntax/jflex.vim
+
+"Cup Highlight
+autocmd BufNewFile,BufRead *.cup setf cup
