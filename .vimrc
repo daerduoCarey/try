@@ -12,9 +12,7 @@ filetype plugin on
 inoremap ( ()<Esc>i
 inoremap { {}<Esc>i
 inoremap [ []<Esc>i
-inoremap <F2> package compiler2014.ast;<CR><CR>public class <CR>{<CR><CR>}<Esc>ki<tab>
-inoremap {: {: RESULT = new  :}<Esc>hhi
-inoremap non non terminal 
+inoremap <F2> package compiler2014.optimization;<CR><CR>public class <CR>{<CR><CR>}<Esc>kli
 
 function! RemoveNextDoubleChar(char)
 	let l:line = getline(".")
@@ -62,9 +60,11 @@ func! RunCode()
 		exec "call RunPython()"
 	elseif &filetype == "java"
 		exec "call CompileJava()"
-	elseif &filetype == 'tex'
+	elseif &filetype == "tex"
 		exec "!xelatex %"
 		exec "!evince %<.pdf"
+	elseif &filetype == "asm"
+		exec "!spim -stat -file %"
 	endif
 endfunc
 
@@ -89,7 +89,7 @@ vmap <F5> :call RunPdflatex()<CR>
 "set grepprg=grep\ -nH\ $*
 "let g:tex_flavor='latex'
 let g:Imap_UsePlaceHolders=0
-"let g:Tex_DefaultTargetFormat = 'pdf'
+let g:Tex_DefaultTargetFormat = 'pdf'
 "set iskeyword+=:
 "autocmd BufEnter *.tex set sw=2
 
@@ -97,10 +97,13 @@ if has("autocmd")
 	autocmd Filetype java setlocal omnifunc=javacomplete#Complete
 endif
 
+set dictionary-=~/.vim/dict dictionary+=~/.vim/dict
+set complete-=k complete+=k
+
 setlocal completefunc=javacomplete#CompleteParamsInfo
 inoremap <buffer> <C-X><C-U> <C-X><C-U><C-P>
 inoremap <buffer> <C-S-Space> <C-X><C-U><C-P>
-autocmd FileType java inoremap <buffer> . .<C-X><C-O><C-P>
+inoremap <buffer> . .<C-X><C-O><C-P>
 
 "JFlex Highlight
 augroup filetype
@@ -110,3 +113,4 @@ au Syntax jflex    so ~/.vim/syntax/jflex.vim
 
 "Cup Highlight
 autocmd BufNewFile,BufRead *.cup setf cup
+

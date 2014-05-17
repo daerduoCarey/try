@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 #This is a python file intending to update voa listening materials from 51voa.com everyday
 #Author: mkch
 

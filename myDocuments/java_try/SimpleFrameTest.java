@@ -5,8 +5,8 @@ public class SimpleFrameTest
 {
 	public static void main(String[] args)
 	{
-		EventQueue.invokeLater(new Runnable()
-		{
+		EventQueue.invokeLater(new Runnable()  //interface
+		{     //an anonymous inter class
 			public void run()
 			{
 				SimpleFrame frame=new SimpleFrame();
