@@ -290,7 +290,7 @@ list<POI*> Search::KNNQuery(struct point p, int cat, int index)
 
 void Search::KNNQuery(kdNode* r)
 {
-	//cout<<"!!!!"<<r->minx<<" "<<r->maxx<<"; "<<r->miny<<" "<<r->maxy<<endl;
+	cout<<"!!!!"<<r->minx<<" "<<r->maxx<<"; "<<r->miny<<" "<<r->maxy<<endl;
 	if(r->isLeaf)
 	{
 		for(list<POI*>::iterator ite=r->data.begin();ite!=r->data.end();++ite)
@@ -316,11 +316,13 @@ void Search::KNNQuery(kdNode* r)
 		if(left_dist<right_dist)
 		{
 			if(left_dist<max_dist||knn_q.size()<knn_k) KNNQuery(r->left);
+			max_dist = knn_q.top().dist;
 			if(right_dist<max_dist||knn_q.size()<knn_k) KNNQuery(r->right);
 		}
 		else
 		{
 			if(right_dist<max_dist||knn_q.size()<knn_k) KNNQuery(r->right);
+			max_dist = knn_q.top().dist;
 			if(left_dist<max_dist||knn_q.size()<knn_k) KNNQuery(r->left);
 		}
 	}

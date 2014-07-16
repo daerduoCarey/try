@@ -27,7 +27,7 @@ int main(int args, char** argv)
 
 
 	cout<<"-------------------KNN Query-----------------------------"<<endl;
-	res = engine.KNNQuery(point(121.411,31.042), CATEGORY, 6);
+	res = engine.KNNQuery(point(121.411,31.042), CATEGORY, 2);
 	cout<<"\nRank:"<<endl;
 	int rank=0;
 	for(list<POI*>::iterator ite=res.begin();ite!=res.end();++ite)
