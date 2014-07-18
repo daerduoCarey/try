@@ -127,15 +127,22 @@ class Search
 
 		list<POI*> Scan(struct rectangle, int cat, string file);
 		list<POI*> Scan(struct circle, int cat, string file);
+		list<POI*> KNNScan(struct point p, int cat, int index, string file);
 
 	private:
 		ifstream fin;
 		map<int, list<POI*>* > table;
 		map<int, kdNode* > trees;
+		
 		int abs(int x);
 		list<POI*> RangeQuery(struct rectangle range, kdNode* r, bool flag);
 		kdNode* split(list<POI*> l, bool flag, combine *com);	//flag=true means to split x
-
+		double dist(const point& p1, const point& p2);
+		double Rad(double d);
+		double dist_from_point_to_rect(const point& p, const kdNode* node);
+		bool point_in_range(const struct point& p, const struct rectangle& range);
+		bool point_in_range(const struct point& p, const struct circle& range);
+		
 		//KNN global data
 		struct Pair
 		{
@@ -155,10 +162,24 @@ class Search
 		int knn_k;
 		priority_queue<Pair> knn_q;
 		void KNNQuery(kdNode* r);
-		double dist(const point& p1, const point& p2);
-		double Rad(double d);
-		double dist_from_point_to_rect(const point& p, const kdNode* node);
 
+		//for KNNScan
+		struct InversePair
+		{
+			POI* poi;
+			double dist;
+			InversePair(POI* p, double d)
+			{
+				poi = p;
+				dist = d;
+			}
+			friend bool operator<(const InversePair& p1, const InversePair& p2)
+			{
+				return p1.dist>p2.dist;
+			}
+		};
+
+	//only for testing and debugging
 	public:
 		void test(int cat);
 		void bianli(kdNode* r);

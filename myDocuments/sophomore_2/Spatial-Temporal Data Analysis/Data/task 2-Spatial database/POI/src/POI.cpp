@@ -15,13 +15,20 @@ bool cmpy(const POI* obj1, const POI* obj2)
 	else return false;
 }
 
-bool point_in_range(const struct point& p, const struct rectangle& range)
+bool Search::point_in_range(const struct point& p, const struct rectangle& range)
 {
 	if(p.x>=range.upperLeft.x&&p.x<=range.bottomRight.x)
 	{
 		if(p.y>=range.upperLeft.y&&p.y<=range.bottomRight.y)
 			return true;
 	}
+	return false;
+}
+
+bool Search::point_in_range(const struct point& p, const struct circle& range)
+{
+	if(dist(p, range.center)<=range.radius)
+		return true;
 	return false;
 }
 
@@ -111,6 +118,8 @@ void Search::IndexBuilding(string file_name)
 			if(y>com->maxy) com->maxy = y;
 		}
 	}
+
+	fin.close();
 
 	//set up all kd-tree's
 	trees = map<int, kdNode* >();
@@ -367,4 +376,85 @@ void Search::bianli(kdNode* r)
 		bianli(r->right);
 		cout<<"}";
 	}
+}
+
+list<POI*> Search::Scan(struct rectangle range, int cat, string file)
+{
+	ifstream fin2(file.c_str());
+
+	list<POI*> l;
+
+	string id;
+	int c;
+	double x, y;
+
+	while(fin2>>id>>c>>x>>y)
+	{
+		if(c==cat&&point_in_range(point(x,y), range))
+		{
+			POI* poi = new POI(id, cat, x, y);
+			l.push_back(poi);
+		}
+	}
+
+	fin2.close();
+
+	return l;
+}
+
+list<POI*> Search::Scan(struct circle range, int cat, string file)
+{
+	ifstream fin2(file.c_str());
+
+	list<POI*> l;
+
+	string id;
+	int c;
+	double x, y;
+
+	while(fin2>>id>>c>>x>>y)
+	{
+		if(c==cat&&point_in_range(point(x,y), range))
+		{
+			POI* poi = new POI(id, cat, x, y);
+			l.push_back(poi);
+		}
+	}
+
+	fin2.close();
+
+	return l;
+}
+
+list<POI*> Search::KNNScan(struct point p, int cat, int index, string file)
+{
+	ifstream fin2(file.c_str());
+
+	list<POI*> l;
+
+	string id;
+	int c;
+	double x, y;
+
+	priority_queue<InversePair> q;
+
+	while(fin2>>id>>c>>x>>y)
+	{
+		if(c==cat)
+		{
+			POI* poi = new POI(id, c, x, y);
+			q.push(InversePair(poi, dist(p, point(x, y))));
+		}
+	}
+
+	while(index>0&&!q.empty())
+	{
+		l.push_back(q.top().poi);
+		q.pop();
+		--index;
+	}
+
+	fin2.close();
+
+	return l;
 }
