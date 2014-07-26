@@ -11,6 +11,8 @@
 
 #define MaxPOIPerNode 3
 #define PI 3.1415926
+#define X_SPLIT_TOT 100
+#define Y_SPLIT_TOT 100
 
 using namespace std;
 
@@ -116,30 +118,57 @@ struct combine
 
 class Search
 {
+	//All the interfaces available to be invoked
 	public:
-		Search() {}
+		Search() {
+			x_tot = X_SPLIT_TOT;
+			y_tot = Y_SPLIT_TOT;
+		}
 		~Search() {}
 
+		//using KD-tree method
 		list<POI*> KNNQuery(struct point p, int cat, int index);
 		list<POI*> RangeQuery(struct circle range, int cat);
 		list<POI*> RangeQuery(struct rectangle range, int cat);
 		void IndexBuilding(string file_name);
 
+		//using Grid-based method
+		list<POI*> KNNQuery2(struct point p, int cat, int index);
+		list<POI*> RangeQuery2(struct circle range, int cat);
+		list<POI*> RangeQuery2(struct rectangle range, int cat);
+		void IndexBuilding2(string file_name);
+		void IndexBuilding2(string file_name, int xtot, int ytot);
+
+		//using Brute-scan method
 		list<POI*> Scan(struct rectangle, int cat, string file);
 		list<POI*> Scan(struct circle, int cat, string file);
 		list<POI*> KNNScan(struct point p, int cat, int index, string file);
 
 	private:
 		ifstream fin;
+		
+		//for kd-tree
 		map<int, list<POI*>* > table;
 		map<int, kdNode* > trees;
+
+		//for grid-based
+		map<int, list<POI*>* > table2;
+		map<int, vector<list<POI*>*>* > vects;
+		double x_max, x_min, y_max, y_min;
+		int x_tot, y_tot;
+		double x_step, y_step;
 		
+		rectangle check_validity(const rectangle& range);
+		int grid_number(double x, double y);
+		bool grid_in_circle(int index, circle range);
+
 		int abs(int x);
 		list<POI*> RangeQuery(struct rectangle range, kdNode* r, bool flag);
 		kdNode* split(list<POI*> l, bool flag, combine *com);	//flag=true means to split x
 		double dist(const point& p1, const point& p2);
 		double Rad(double d);
-		double dist_from_point_to_rect(const point& p, const kdNode* node);
+		double dist_from_point_to_rect(point p, kdNode* node);
+		double dist_from_point_to_rect(point p, double, double, double, double);
 		bool point_in_range(const struct point& p, const struct rectangle& range);
 		bool point_in_range(const struct point& p, const struct circle& range);
 		
@@ -178,6 +207,12 @@ class Search
 				return p1.dist>p2.dist;
 			}
 		};
+
+		double dist_to_long(double, double);
+		double dist_to_lat(double);
+
+		void KNNQuery2_grid_scan(int, list<POI*>*);
+		bool KNNQuery2_process(int, int, list<POI*>*);
 
 	//only for testing and debugging
 	public:

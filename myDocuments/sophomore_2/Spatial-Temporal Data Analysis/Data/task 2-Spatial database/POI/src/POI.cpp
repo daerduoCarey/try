@@ -32,11 +32,8 @@ bool Search::point_in_range(const struct point& p, const struct circle& range)
 	return false;
 }
 
-double Search::dist_from_point_to_rect(const point& p, const kdNode* node)
+double Search::dist_from_point_to_rect(point p, double minx, double miny, double maxx, double maxy)
 {
-	double minx = node->minx, maxx = node->maxx;
-	double miny = node->miny, maxy = node->maxy;
-
 	if(p.x<minx)
 	{
 		if(p.y<miny) return dist(point(minx, miny), p);
@@ -55,6 +52,14 @@ double Search::dist_from_point_to_rect(const point& p, const kdNode* node)
 		else if(p.y>maxy) return dist(point(p.x, maxy), p);
 		else return 0;
 	}
+}
+
+double Search::dist_from_point_to_rect(point p, kdNode* node)
+{
+	double minx = node->minx, maxx = node->maxx;
+	double miny = node->miny, maxy = node->maxy;
+
+	return dist_from_point_to_rect(p, minx, miny, maxx, maxy);
 }
 
 double Search::Rad(double d)
@@ -77,6 +82,18 @@ double Search::dist(const point& p1, const point& p2)
         double delta_sigma = atan2(top, bottom);
         double distance = delta_sigma * 6378137.0;
         return distance;
+}
+
+double Search::dist_to_lat(double x)
+{
+	double tmp =  (2 * PI * 6378137.0) / 360;
+	return x / tmp;
+}
+
+double Search::dist_to_long(double x, double lat)
+{
+	double tmp = (2 * PI * 6378137.0 * cos(Rad(lat))) / 360;
+	return x / tmp;
 }
 
 void Search::IndexBuilding(string file_name)
@@ -262,7 +279,10 @@ list<POI*> Search::RangeQuery(struct rectangle range, kdNode* r, bool flag)
 
 list<POI*> Search::RangeQuery(struct circle range, int cat)
 {
-	list<POI*> poss = RangeQuery(rectangle(point(range.center.x-range.radius, range.center.y-range.radius), point(range.center.x+range.radius, range.center.y+range.radius)), cat);
+	double lat_delta = dist_to_lat(range.radius);
+	double long_delta = dist_to_long(range.radius, range.center.y);
+
+	list<POI*> poss = RangeQuery(rectangle(point(range.center.x-long_delta, range.center.y-lat_delta), point(range.center.x+long_delta, range.center.y+lat_delta)), cat);
 	list<POI*> res;
 	for(list<POI*>::iterator ite=poss.begin();ite!=poss.end();++ite)
 	{
@@ -289,7 +309,7 @@ list<POI*> Search::KNNQuery(struct point p, int cat, int index)
 	while(k>0&&!knn_q.empty())
 	{
 		res.push_back(knn_q.top().poi);
-		cout<<knn_q.top().poi->id<<": "<<knn_q.top().dist<<endl;
+		//cout<<knn_q.top().poi->id<<": "<<knn_q.top().dist<<endl;
 		knn_q.pop();
 		--k;
 	}
@@ -299,7 +319,7 @@ list<POI*> Search::KNNQuery(struct point p, int cat, int index)
 
 void Search::KNNQuery(kdNode* r)
 {
-	cout<<"!!!!"<<r->minx<<" "<<r->maxx<<"; "<<r->miny<<" "<<r->maxy<<endl;
+//	cout<<"!!!!"<<r->minx<<" "<<r->maxx<<"; "<<r->miny<<" "<<r->maxy<<endl;
 	if(r->isLeaf)
 	{
 		for(list<POI*>::iterator ite=r->data.begin();ite!=r->data.end();++ite)
@@ -457,4 +477,336 @@ list<POI*> Search::KNNScan(struct point p, int cat, int index, string file)
 	fin2.close();
 
 	return l;
+}
+
+void Search::IndexBuilding2(string file_name, int xtot, int ytot)
+{
+	x_tot = xtot;
+	y_tot = ytot;
+	IndexBuilding2(file_name);
+}
+
+void Search::IndexBuilding2(string file_name)
+{
+	fin.open(file_name.c_str());
+
+	string id;
+	int cat;
+	double x,y;
+
+	table2 = map<int, list<POI*>* >();
+
+	int NOT_READY = 1;
+
+	//classify all POIs
+	while(fin>>id>>cat>>x>>y)
+	{
+		POI* poi = new POI(id, cat, x, y);
+			
+		if(NOT_READY) 
+		{
+			x_max = x_min = x;
+			y_max = y_min = y;
+			NOT_READY = 0;
+		}
+
+		if(x>x_max) x_max = x;
+		if(x<x_min) x_min = x;
+		if(y<y_min) y_min = y;
+		if(y>y_max) y_max = y;
+
+		map<int, list<POI*>* >::iterator ite;
+		ite = table2.find(cat);
+		if(ite==table2.end())
+		{
+			list<POI*>* l = new list<POI*>();
+			l->push_back(poi);
+			table2.insert(pair<int, list<POI*>* >(cat, l));
+		}
+		else
+		{
+			list<POI*>* l = ite->second;
+			l->push_back(poi);
+		}
+	}
+
+	fin.close();
+
+	x_step = (x_max - x_min)/x_tot;
+	y_step = (y_max - y_min)/y_tot;
+
+	//set up all vects
+	vects = map<int, vector<list<POI*>*>*>();
+	
+	map<int, list<POI*>* >::iterator ite;
+
+	for(ite=table2.begin(); ite!=table2.end(); ++ite)
+	{
+		list<POI*>* l = ite->second;
+		vector<list<POI*>*>* vect = new vector<list<POI*>*>(x_tot*y_tot);
+		vects.insert(pair<int, vector<list<POI*>*>*>(ite->first, vect));
+		for(list<POI*>::iterator i=l->begin(); i!=l->end(); ++i)
+		{
+			int index = grid_number((*i)->p.x, (*i)->p.y);
+			if((*vect)[index]==0)
+			{
+				list<POI*>* l = new list<POI*>();
+				l->push_back(*i);
+				(*vect)[index] = l;
+			}
+			else
+			{
+				(*vect)[index]->push_back(*i);
+			}
+		}
+	}
+}
+
+list<POI*> Search::KNNQuery2(struct point p, int cat, int index)
+{
+	list<POI*> res = list<POI*>();
+	
+	knn_q = priority_queue<Pair>();
+	knn_k = index; 
+	knn_p = p;
+
+	map<int, vector<list<POI*>*>*>::iterator ite = vects.find(cat);
+
+	if(ite!=vects.end())
+	{
+		vector<list<POI*>*>* vect = ite->second;
+
+		if(p.x>x_max||p.x<x_min||p.y>y_max||p.y<y_min) 
+		{
+			cout<<"ERROR: The query point is not in the range!"<<endl;
+			return res;
+		}
+
+		int g = grid_number(p.x, p.y);
+		
+		int x = g / y_tot, y = g % y_tot, deep = 0;
+
+		//cout<<x<<" "<<y<<endl;
+
+		KNNQuery2_grid_scan(g, (*vect)[g]);
+		
+		bool flag = true;
+		while(flag)
+		{
+			//cout<<deep+1<<endl;
+			++deep; flag = false;
+			double min_dist = -1;
+
+			int i, j;
+
+			j = y + deep;
+			if(j < y_tot)
+			{
+				for(int i = max(x-deep, 0); i <= min(x+deep, x_tot-1); ++i)
+				{
+					flag |= KNNQuery2_process(i, j, (*vect)[i * y_tot + j]);
+				}
+			}
+			
+			j = y - deep;
+			if(j >= 0)
+			{
+				for(int i = max(x-deep, 0); i <= min(x+deep, x_tot-1); ++i)
+				{
+					flag |= KNNQuery2_process(i, j, (*vect)[i * y_tot + j]);
+				}
+			}
+			
+			i = x + deep;
+			if(i < x_tot)
+			{
+				for(int j = max(y-deep, 0); j <= min(y+deep, y_tot-1); ++j)
+				{
+					flag |= KNNQuery2_process(i, j, (*vect)[i * y_tot + j]);
+				}
+			}
+
+			i = x - deep;
+			if(i >= 0)
+			{
+				for(int j = max(y-deep, 0); j <= min(y+deep, y_tot-1); ++j)
+				{
+					flag |= KNNQuery2_process(i, j, (*vect)[i * y_tot + j]);
+				}
+			}
+		}
+	}
+
+	while(!knn_q.empty())
+	{
+		POI* poi = knn_q.top().poi;
+		//cout<<poi->id<<": "<<knn_q.top().dist<<endl;
+		res.push_front(poi);
+		knn_q.pop();
+	}
+
+	return res;
+}
+
+bool Search::KNNQuery2_process(int i, int j, list<POI*>* l)
+{
+	double minx = x_min + i * x_step, miny = y_min + j * y_step;
+	double maxx = x_min + (i+1) * x_step, maxy = y_min + (j+1) * y_step;
+
+	if(knn_q.size() < knn_k || knn_q.top().dist > dist_from_point_to_rect(knn_p, minx, miny, maxx, maxy))
+	{
+		KNNQuery2_grid_scan(i*y_tot+j, l);
+		return true;
+	}
+	return false;
+}
+
+void Search::KNNQuery2_grid_scan(int g, list<POI*>* l)
+{
+	if(l == 0) return;
+
+	for(list<POI*>::iterator ite=l->begin(); ite!=l->end(); ++ite)
+	{
+		double dis = dist(knn_p, (*ite)->p);
+		knn_q.push(Pair(*ite, dis));
+		if(knn_q.size()>knn_k) knn_q.pop();
+	}
+}
+
+list<POI*> Search::RangeQuery2(struct rectangle range, int cat)
+{
+	list<POI*> res = list<POI*>();
+
+	range = check_validity(range);
+
+	map<int, vector<list<POI*>*>*>::iterator ite = vects.find(cat);
+	
+	if(ite!=vects.end())
+	{
+		vector<list<POI*>*>* vect = ite->second;
+
+		int index1 = grid_number(range.upperLeft.x, range.upperLeft.y);
+		int index2 = grid_number(range.bottomRight.x, range.bottomRight.y);
+		int gx1 = index1 / y_tot, gy1 = index1 % y_tot;
+		int gx2 = index2 / y_tot, gy2 = index2 % y_tot;
+
+		for(int i=gx1; i<=gx2; ++i)
+			for(int j=gy1; j<=gy2; ++j)
+			{
+				int index = i*y_tot + j;
+				list<POI*>* l = (*vect)[index];
+				
+				if(l==0) continue;
+				for(list<POI*>::iterator ddq = l->begin(); ddq!= l->end(); ++ddq)
+				{
+					if(point_in_range((*ddq)->p, range))
+					{
+						res.push_back(*ddq);
+					}
+				}
+			}
+	}
+
+	return res;
+}
+
+list<POI*> Search::RangeQuery2(struct circle range, int cat)
+{
+	list<POI*> res;
+
+	double lat_delta = dist_to_lat(range.radius);
+	double long_delta = dist_to_long(range.radius, range.center.y);
+	
+	struct point p1(range.center.x - long_delta, range.center.y - lat_delta);
+	struct point p2(range.center.x + long_delta, range.center.y + lat_delta);
+	struct rectangle range2(p1, p2);
+
+	//cout<<"("<<range2.upperLeft.x<<", "<<range2.upperLeft.y<<") -> ("<<range2.bottomRight.x<<", "<<range2.bottomRight.y<<")"<<endl;
+	range2 = check_validity(range2);
+	//cout<<"("<<range2.upperLeft.x<<", "<<range2.upperLeft.y<<") -> ("<<range2.bottomRight.x<<", "<<range2.bottomRight.y<<")"<<endl;
+
+	map<int, vector<list<POI*>*>*>::iterator ite = vects.find(cat);
+	if(ite!=vects.end())
+	{
+		vector<list<POI*>*>* vect = ite->second;
+		
+		int index1 = grid_number(range2.upperLeft.x, range2.upperLeft.y);
+		int index2 = grid_number(range2.bottomRight.x, range2.bottomRight.y);
+
+		int gx1 = index1 / y_tot, gy1 = index1 % y_tot;
+		int gx2 = index2 / y_tot, gy2 = index2 % y_tot;
+
+		//int a[100][100]={0};
+
+		for(int i=gx1; i<=gx2; ++i)
+			for(int j=gy1; j<=gy2; ++j)
+			{
+				int index = i*y_tot + j;
+
+				if(!grid_in_circle(index, range)) continue;
+			
+				list<POI*>* l = (*vect)[index];
+
+		//		a[i][j]=1;
+
+				if(l==0) continue;
+
+				for(list<POI*>::iterator ddq = l->begin(); ddq!= l->end(); ++ddq)
+				{
+					if(point_in_range((*ddq)->p, range))
+					{
+						res.push_back(*ddq);
+					}
+				}
+			}
+		
+		/*for(int i=gx1;i<=gx2;++i)
+		{
+			for(int j=gy1;j<=gy2;++j)
+				cout<<a[i][j]<<" ";
+			cout<<endl;
+		}*/
+	}
+
+	return res;
+}
+
+bool Search::grid_in_circle(int index, circle range)
+{
+	int x = index / y_tot, y = index % y_tot;
+	
+	double minx = x * x_step + x_min;
+	double maxx = (x + 1) * x_step + x_min;
+	double miny = y * y_step + y_min;
+	double maxy = (y + 1) * y_step + y_min;
+
+	if(dist_from_point_to_rect(range.center, minx, miny, maxx, maxy) < range.radius)
+		return true;
+	return false;
+}
+
+int Search::grid_number(double x, double y)
+{
+	int xx, yy;
+	xx = (x - x_min) / x_step; if(xx >= x_tot) xx = x_tot - 1;
+	yy = (y - y_min) / y_step; if(yy >= y_tot) yy = y_tot - 1;
+	return xx * y_tot + yy;
+}
+
+rectangle Search::check_validity(const rectangle& range)
+{
+	double minx = range.upperLeft.x, miny = range.upperLeft.y; 
+	double maxx = range.bottomRight.x, maxy = range.bottomRight.y;
+	
+	double tmp;
+
+	if(minx > maxx) tmp = minx, minx = maxx, maxx = tmp;
+	if(miny > maxy) tmp = miny, miny = maxy, maxy = tmp;
+
+	if(minx < x_min) minx = x_min; if(minx > x_max) minx = x_max;
+	if(miny < y_min) miny = y_min; if(miny > y_max) miny = y_max;
+	if(maxx < x_min) maxx = x_min; if(maxx > x_max) maxx = x_max;
+	if(maxy < y_min) maxy = y_min; if(maxy > y_max) maxy = y_max;
+
+	return rectangle(point(minx, miny), point(maxx, maxy));
 }
