@@ -1,0 +1,20 @@
+# depslib dependency file v1.0
+1405403907 source:/home/mkch/myDocuments/sophomore_2/Spatial-Temporal Data Analysis/Data/task 2-Spatial database/POI/src/POI.cpp
+	"POI.h"
+
+1405403883 /home/mkch/myDocuments/sophomore_2/Spatial-Temporal Data Analysis/Data/task 2-Spatial database/POI/src/POI.h
+	<iostream>
+	<cstdio>
+	<cstdlib>
+	<algorithm>
+	<map>
+	<list>
+	<string>
+	<fstream>
+
+1405403566 source:/home/mkch/myDocuments/sophomore_2/Spatial-Temporal Data Analysis/Data/task 2-Spatial database/POI/src/main.cpp
+	<iostream>
+	<cstdio>
+	<string>
+	"POI.h"
+

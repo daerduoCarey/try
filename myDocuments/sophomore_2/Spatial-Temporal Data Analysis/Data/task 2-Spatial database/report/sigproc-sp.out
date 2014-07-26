@@ -1,0 +1,20 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}
+\BOOKMARK [1][-]{section.2}{Grid-Based Method}{}
+\BOOKMARK [2][-]{subsection.2.1}{Brief Introduction }{section.2}
+\BOOKMARK [2][-]{subsection.2.2}{Algorithm Overview }{section.2}
+\BOOKMARK [3][-]{subsubsection.2.2.1}{Initialization}{subsection.2.2}
+\BOOKMARK [3][-]{subsubsection.2.2.2}{Rectangle Range Query}{subsection.2.2}
+\BOOKMARK [3][-]{subsubsection.2.2.3}{Circle Range Query}{subsection.2.2}
+\BOOKMARK [3][-]{subsubsection.2.2.4}{K Nearest Neighbours Query}{subsection.2.2}
+\BOOKMARK [2][-]{subsection.2.3}{Performance Analysis}{section.2}
+\BOOKMARK [1][-]{section.3}{KD-Tree Method}{}
+\BOOKMARK [2][-]{subsection.3.1}{Brief Introduction}{section.3}
+\BOOKMARK [2][-]{subsection.3.2}{Algorithm Overview}{section.3}
+\BOOKMARK [3][-]{subsubsection.3.2.1}{Initialization}{subsection.3.2}
+\BOOKMARK [3][-]{subsubsection.3.2.2}{Rectangle Range Query}{subsection.3.2}
+\BOOKMARK [3][-]{subsubsection.3.2.3}{Circle Range Query}{subsection.3.2}
+\BOOKMARK [3][-]{subsubsection.3.2.4}{K Nearest Neighbours Query}{subsection.3.2}
+\BOOKMARK [2][-]{subsection.3.3}{Performance Analysis}{section.3}
+\BOOKMARK [1][-]{section.4}{Performance Comparison}{}
+\BOOKMARK [1][-]{section.5}{Conclusion}{}
+\BOOKMARK [1][-]{section.6}{Acknowledgement}{}

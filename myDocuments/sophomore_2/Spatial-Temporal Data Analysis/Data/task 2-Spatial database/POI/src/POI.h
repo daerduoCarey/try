@@ -163,6 +163,8 @@ class Search
 		bool grid_in_circle(int index, circle range);
 
 		int abs(int x);
+		int tot_running_time;
+
 		list<POI*> RangeQuery(struct rectangle range, kdNode* r, bool flag);
 		kdNode* split(list<POI*> l, bool flag, combine *com);	//flag=true means to split x
 		double dist(const point& p1, const point& p2);

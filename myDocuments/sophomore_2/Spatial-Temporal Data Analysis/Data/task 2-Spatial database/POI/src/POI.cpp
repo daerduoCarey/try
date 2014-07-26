@@ -208,6 +208,8 @@ kdNode* Search::split(list<POI*> l, bool flag, combine *com)
 
 list<POI*> Search::RangeQuery(struct rectangle range, int cat)
 {
+	tot_running_time = 0;
+
 	map<int, kdNode*>::iterator ite = trees.find(cat);
 	if(ite==trees.end()) 
 	{
@@ -216,17 +218,25 @@ list<POI*> Search::RangeQuery(struct rectangle range, int cat)
 	}
 	
 	kdNode* root = ite->second;
-	return RangeQuery(range, root, true);
+	
+	list<POI*> res = RangeQuery(range, root, true);
+	
+	cout<<"TOTAL_RUNING_TIME: "<<tot_running_time<<endl;
+
+	return res;
 }
 
 list<POI*> Search::RangeQuery(struct rectangle range, kdNode* r, bool flag)
 {
+	++tot_running_time;
+
 	list<POI*> res;
 	if(r->isLeaf)
 	{
 		list<POI*> l = r->data;
 		for(list<POI*>::iterator i=l.begin();i!=l.end();++i)
 		{
+			++tot_running_time;
 			if(point_in_range((*i)->p, range))
 				res.push_back(*i);
 		}
@@ -271,6 +281,7 @@ list<POI*> Search::RangeQuery(struct rectangle range, kdNode* r, bool flag)
 				res = RangeQuery(range, r->left, true);
 			}
 		}
+
 		if(point_in_range(r->split->p, range))
 			res.push_back(r->split);
 	}
@@ -279,6 +290,8 @@ list<POI*> Search::RangeQuery(struct rectangle range, kdNode* r, bool flag)
 
 list<POI*> Search::RangeQuery(struct circle range, int cat)
 {
+	tot_running_time = 0;
+
 	double lat_delta = dist_to_lat(range.radius);
 	double long_delta = dist_to_long(range.radius, range.center.y);
 
@@ -286,11 +299,15 @@ list<POI*> Search::RangeQuery(struct circle range, int cat)
 	list<POI*> res;
 	for(list<POI*>::iterator ite=poss.begin();ite!=poss.end();++ite)
 	{
+		++tot_running_time;
 		if(dist(range.center, (*ite)->p) < range.radius)
 		{
 			res.push_back(*ite);
 		}
 	}
+
+	cout<<"TOTAL_RUNNING_TIME: "<<tot_running_time<<endl;
+
 	return res;
 }
 
@@ -299,6 +316,8 @@ list<POI*> Search::KNNQuery(struct point p, int cat, int index)
 	knn_q = priority_queue<Pair>();
 	knn_k = index; 
 	knn_p = p;
+
+	tot_running_time = 0;
 
 	map<int, kdNode*>::iterator ite = trees.find(cat);
 	list<POI*> res;
@@ -314,16 +333,23 @@ list<POI*> Search::KNNQuery(struct point p, int cat, int index)
 		--k;
 	}
 	res.reverse();
+
+	cout<<"TOTAL_RUNNING_TIME: "<<tot_running_time<<endl;
+
 	return res;
 }
 
 void Search::KNNQuery(kdNode* r)
 {
+	++tot_running_time;
+
 //	cout<<"!!!!"<<r->minx<<" "<<r->maxx<<"; "<<r->miny<<" "<<r->maxy<<endl;
 	if(r->isLeaf)
 	{
 		for(list<POI*>::iterator ite=r->data.begin();ite!=r->data.end();++ite)
 		{
+			++tot_running_time;
+
 			double new_dist = dist((*ite)->p, knn_p);
 			knn_q.push(Pair(*ite, new_dist));
 			if(knn_q.size()>knn_k) knn_q.pop();
@@ -335,6 +361,9 @@ void Search::KNNQuery(kdNode* r)
 		//cout<<"("<<knn_p.x<<", "<<knn_p.y<<")  ";
 		//cout<<"("<<r->split->p.x<<", "<<r->split->p.y<<")   ";
 		//cout<<r->split->id<<": "<<new_dist<<" "<<(knn_q.empty()? -1:knn_q.top().dist)<<endl;
+		
+		++tot_running_time;
+
 		knn_q.push(Pair(r->split, new_dist));
 		if(knn_q.size()>knn_k) knn_q.pop();
 		
@@ -404,12 +433,16 @@ list<POI*> Search::Scan(struct rectangle range, int cat, string file)
 
 	list<POI*> l;
 
+	tot_running_time = 0;
+
 	string id;
 	int c;
 	double x, y;
 
 	while(fin2>>id>>c>>x>>y)
 	{
+		if(c==cat) ++tot_running_time;
+
 		if(c==cat&&point_in_range(point(x,y), range))
 		{
 			POI* poi = new POI(id, cat, x, y);
@@ -419,12 +452,16 @@ list<POI*> Search::Scan(struct rectangle range, int cat, string file)
 
 	fin2.close();
 
+	cout<<"TOTAL_RUNNING_TIME: "<<tot_running_time<<endl;
+
 	return l;
 }
 
 list<POI*> Search::Scan(struct circle range, int cat, string file)
 {
 	ifstream fin2(file.c_str());
+
+	tot_running_time = 0;
 
 	list<POI*> l;
 
@@ -434,12 +471,16 @@ list<POI*> Search::Scan(struct circle range, int cat, string file)
 
 	while(fin2>>id>>c>>x>>y)
 	{
+		if(c==cat) ++tot_running_time;
+
 		if(c==cat&&point_in_range(point(x,y), range))
 		{
 			POI* poi = new POI(id, cat, x, y);
 			l.push_back(poi);
 		}
 	}
+
+	cout<<"TOTAL_RUNNING_TIME: "<<tot_running_time<<endl;
 
 	fin2.close();
 
@@ -452,6 +493,8 @@ list<POI*> Search::KNNScan(struct point p, int cat, int index, string file)
 
 	list<POI*> l;
 
+	tot_running_time = 0;
+
 	string id;
 	int c;
 	double x, y;
@@ -462,6 +505,8 @@ list<POI*> Search::KNNScan(struct point p, int cat, int index, string file)
 	{
 		if(c==cat)
 		{
+			++tot_running_time;
+
 			POI* poi = new POI(id, c, x, y);
 			q.push(InversePair(poi, dist(p, point(x, y))));
 		}
@@ -475,6 +520,8 @@ list<POI*> Search::KNNScan(struct point p, int cat, int index, string file)
 	}
 
 	fin2.close();
+
+	cout<<"TOTAL_RUNNING_TIME: "<<tot_running_time<<endl;
 
 	return l;
 }
@@ -565,7 +612,9 @@ void Search::IndexBuilding2(string file_name)
 list<POI*> Search::KNNQuery2(struct point p, int cat, int index)
 {
 	list<POI*> res = list<POI*>();
-	
+
+	tot_running_time = 0;
+
 	knn_q = priority_queue<Pair>();
 	knn_k = index; 
 	knn_p = p;
@@ -593,6 +642,8 @@ list<POI*> Search::KNNQuery2(struct point p, int cat, int index)
 		bool flag = true;
 		while(flag)
 		{
+			++tot_running_time;
+
 			//cout<<deep+1<<endl;
 			++deep; flag = false;
 			double min_dist = -1;
@@ -604,6 +655,7 @@ list<POI*> Search::KNNQuery2(struct point p, int cat, int index)
 			{
 				for(int i = max(x-deep, 0); i <= min(x+deep, x_tot-1); ++i)
 				{
+					++tot_running_time;
 					flag |= KNNQuery2_process(i, j, (*vect)[i * y_tot + j]);
 				}
 			}
@@ -613,6 +665,7 @@ list<POI*> Search::KNNQuery2(struct point p, int cat, int index)
 			{
 				for(int i = max(x-deep, 0); i <= min(x+deep, x_tot-1); ++i)
 				{
+					++tot_running_time;
 					flag |= KNNQuery2_process(i, j, (*vect)[i * y_tot + j]);
 				}
 			}
@@ -622,6 +675,7 @@ list<POI*> Search::KNNQuery2(struct point p, int cat, int index)
 			{
 				for(int j = max(y-deep, 0); j <= min(y+deep, y_tot-1); ++j)
 				{
+					++tot_running_time;
 					flag |= KNNQuery2_process(i, j, (*vect)[i * y_tot + j]);
 				}
 			}
@@ -631,6 +685,7 @@ list<POI*> Search::KNNQuery2(struct point p, int cat, int index)
 			{
 				for(int j = max(y-deep, 0); j <= min(y+deep, y_tot-1); ++j)
 				{
+					++tot_running_time;
 					flag |= KNNQuery2_process(i, j, (*vect)[i * y_tot + j]);
 				}
 			}
@@ -644,6 +699,8 @@ list<POI*> Search::KNNQuery2(struct point p, int cat, int index)
 		res.push_front(poi);
 		knn_q.pop();
 	}
+
+	cout<<"TOTAL_RUNNING_TIME: "<<tot_running_time<<endl;
 
 	return res;
 }
@@ -667,6 +724,8 @@ void Search::KNNQuery2_grid_scan(int g, list<POI*>* l)
 
 	for(list<POI*>::iterator ite=l->begin(); ite!=l->end(); ++ite)
 	{
+		++tot_running_time;
+
 		double dis = dist(knn_p, (*ite)->p);
 		knn_q.push(Pair(*ite, dis));
 		if(knn_q.size()>knn_k) knn_q.pop();
@@ -678,6 +737,8 @@ list<POI*> Search::RangeQuery2(struct rectangle range, int cat)
 	list<POI*> res = list<POI*>();
 
 	range = check_validity(range);
+
+	tot_running_time = 0;
 
 	map<int, vector<list<POI*>*>*>::iterator ite = vects.find(cat);
 	
@@ -696,9 +757,13 @@ list<POI*> Search::RangeQuery2(struct rectangle range, int cat)
 				int index = i*y_tot + j;
 				list<POI*>* l = (*vect)[index];
 				
+				++tot_running_time;
+
 				if(l==0) continue;
 				for(list<POI*>::iterator ddq = l->begin(); ddq!= l->end(); ++ddq)
 				{
+					++tot_running_time;
+
 					if(point_in_range((*ddq)->p, range))
 					{
 						res.push_back(*ddq);
@@ -707,12 +772,16 @@ list<POI*> Search::RangeQuery2(struct rectangle range, int cat)
 			}
 	}
 
+	cout<<"TOTAL_RUNNING_TIME: "<<tot_running_time<<endl;
+
 	return res;
 }
 
 list<POI*> Search::RangeQuery2(struct circle range, int cat)
 {
 	list<POI*> res;
+
+	tot_running_time = 0;
 
 	double lat_delta = dist_to_lat(range.radius);
 	double long_delta = dist_to_long(range.radius, range.center.y);
@@ -741,10 +810,12 @@ list<POI*> Search::RangeQuery2(struct circle range, int cat)
 		for(int i=gx1; i<=gx2; ++i)
 			for(int j=gy1; j<=gy2; ++j)
 			{
+				++tot_running_time;
+
 				int index = i*y_tot + j;
 
 				if(!grid_in_circle(index, range)) continue;
-			
+		
 				list<POI*>* l = (*vect)[index];
 
 		//		a[i][j]=1;
@@ -753,6 +824,8 @@ list<POI*> Search::RangeQuery2(struct circle range, int cat)
 
 				for(list<POI*>::iterator ddq = l->begin(); ddq!= l->end(); ++ddq)
 				{
+					++tot_running_time;
+
 					if(point_in_range((*ddq)->p, range))
 					{
 						res.push_back(*ddq);
@@ -767,6 +840,8 @@ list<POI*> Search::RangeQuery2(struct circle range, int cat)
 			cout<<endl;
 		}*/
 	}
+
+	cout<<"TOTAL_RUNNING_TIME: "<<tot_running_time<<endl;
 
 	return res;
 }

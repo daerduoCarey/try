@@ -5,7 +5,7 @@
 
 using namespace std;
 
-const int CATEGORY =71100;
+const int CATEGORY = 0;
 
 void print_list(list<POI*>& res)
 {
@@ -18,22 +18,22 @@ void print_list(list<POI*>& res)
 int main(int args, char** argv)
 {
 	Search engine;
-	engine.IndexBuilding("input");
-	engine.IndexBuilding2("input");
+	engine.IndexBuilding("input2");
+	engine.IndexBuilding2("input2",50,50);
 	engine.test(CATEGORY);
 
 	list<POI*> res;
 
 	cout<<"------------------Rectangle RangeQuery(KD)--------------------"<<endl;
-	res = engine.RangeQuery(rectangle(point(121.44, 31.02), point(121.46, 31.04)), CATEGORY);
+	res = engine.RangeQuery(rectangle(point(121.44, 31.02), point(121.45, 31.04)), CATEGORY);
 	print_list(res);
 	
 	cout<<"------------------Rectangle RangeQuery(GRID)--------------------"<<endl;
-	res = engine.RangeQuery2(rectangle(point(121.44, 31.02), point(121.46, 31.04)), CATEGORY);
+	res = engine.RangeQuery2(rectangle(point(121.44, 31.02), point(121.45, 31.04)), CATEGORY);
 	print_list(res);
 
 	cout<<"---------------------Brute Scan---------------------------"<<endl;
-	res = engine.Scan(rectangle(point(121.44,31.02), point(121.46,31.04)), CATEGORY, "input");
+	res = engine.Scan(rectangle(point(121.44,31.02), point(121.46,31.04)), CATEGORY, "input2");
 	print_list(res);
 
 	cout<<"----------------------Circle RangeQuery(KD)-------------------"<<endl;
@@ -45,18 +45,18 @@ int main(int args, char** argv)
 	print_list(res);
 
 	cout<<"----------------------Brute Scan--------------------------"<<endl;
-	res = engine.Scan(circle(point(121.411, 31.042), 200), CATEGORY, "input");
+	res = engine.Scan(circle(point(121.411, 31.042), 200), CATEGORY, "input2");
 	print_list(res);
 
 	cout<<"-------------------KNN Query(KD)-----------------------------"<<endl;
-	res = engine.KNNQuery(point(121.411, 31.042), CATEGORY, 3);
+	res = engine.KNNQuery(point(121.411, 31.042), CATEGORY, 10);
 	print_list(res);
 
 	cout<<"-------------------KNN Query(GRID)-----------------------------"<<endl;
-	res = engine.KNNQuery2(point(121.411, 31.042), CATEGORY, 3);
+	res = engine.KNNQuery2(point(121.411, 31.042), CATEGORY, 10);
 	print_list(res);
 
 	cout<<"-------------------Brute Scan-----------------------------"<<endl;
-	res = engine.KNNScan(point(121.411, 31.042), CATEGORY, 3, "input");
+	res = engine.KNNScan(point(121.411, 31.042), CATEGORY, 10, "input2");
 	print_list(res);
 }
